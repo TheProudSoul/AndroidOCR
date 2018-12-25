@@ -28,10 +28,12 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:28.0.0'
     testImplementation 'junit:junit:4.12'
 
+    //网络请求
+    implementation 'com.zhousf.lib:okhttp3:2.9.8'
     //图像裁剪
     implementation 'com.edmodo:cropper:1.0.1'
     //文字识别
-    implementation 'com.rmtheis:tess-two:6.1.1'
+    implementation 'com.rmtheis:tess-two:9.0.0'
     //google分析
     implementation 'com.google.android.gms:play-services-analytics:16.0.6'
 }

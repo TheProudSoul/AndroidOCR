@@ -2,10 +2,12 @@ package com.wt.ocr;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -17,6 +19,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -33,6 +36,8 @@ import android.widget.TextView;
 import com.edmodo.cropper.CropImageView;
 import com.wt.ocr.camear.CameraPreview;
 import com.wt.ocr.camear.FocusView;
+import com.wt.ocr.utils.HttpUtils;
+import com.wt.ocr.utils.Url;
 import com.wt.ocr.utils.Utils;
 
 import java.io.File;
@@ -41,11 +46,35 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+
 /**
  * 拍照界面
  * Created by Administrator on 2016/12/8.
  */
 public class TakePhoteActivity extends AppCompatActivity implements CameraPreview.OnCameraStatusListener, SensorEventListener {
+
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            "android.permission.READ_EXTERNAL_STORAGE",
+            "android.permission.WRITE_EXTERNAL_STORAGE" };
+
+    public static void verifyStoragePermissions(Activity activity) {
+
+        try {
+            //检测是否有写的权限
+            int permission = ActivityCompat.checkSelfPermission(activity,
+                    "android.permission.WRITE_EXTERNAL_STORAGE");
+            if (permission != PackageManager.PERMISSION_GRANTED) {
+                // 没有写的权限，去申请写的权限，会弹出对话框
+                ActivityCompat.requestPermissions(activity, PERMISSIONS_STORAGE,REQUEST_EXTERNAL_STORAGE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     //true:横屏   false:竖屏
     public static final boolean isTransverse = true;
@@ -57,14 +86,6 @@ public class TakePhoteActivity extends AppCompatActivity implements CameraPrevie
     CropImageView mCropImageView;
     RelativeLayout mTakePhotoLayout;
     LinearLayout mCropperLayout;
-
-    private ImageView btnClose;
-    private ImageView btnShutter;
-    private Button btnAlbum;
-
-    private ImageView btnStartCropper;
-    private ImageView btnCloseCropper;
-
 
     /**
      * 旋转文字
@@ -81,25 +102,24 @@ public class TakePhoteActivity extends AppCompatActivity implements CameraPrevie
         setContentView(R.layout.activity_take_phote);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-
-        btnClose = (ImageView) findViewById(R.id.btn_close);
+        ImageView btnClose = findViewById(R.id.btn_close);
         btnClose.setOnClickListener(onClickListener);
-        btnShutter = (ImageView) findViewById(R.id.btn_shutter);
+        ImageView btnShutter = findViewById(R.id.btn_shutter);
         btnShutter.setOnClickListener(onClickListener);
-        btnAlbum = (Button) findViewById(R.id.btn_album);
+        Button btnAlbum = findViewById(R.id.btn_album);
         btnAlbum.setOnClickListener(onClickListener);
 
-        btnStartCropper = (ImageView) findViewById(R.id.btn_startcropper);
+        ImageView btnStartCropper = findViewById(R.id.btn_startcropper);
         btnStartCropper.setOnClickListener(cropcper);
-        btnCloseCropper = (ImageView) findViewById(R.id.btn_closecropper);
+        ImageView btnCloseCropper = findViewById(R.id.btn_closecropper);
         btnCloseCropper.setOnClickListener(cropcper);
 
-        mTakePhotoLayout = (RelativeLayout) findViewById(R.id.take_photo_layout);
-        mCameraPreview = (CameraPreview) findViewById(R.id.cameraPreview);
-        FocusView focusView = (FocusView) findViewById(R.id.view_focus);
+        mTakePhotoLayout = findViewById(R.id.take_photo_layout);
+        mCameraPreview = findViewById(R.id.cameraPreview);
+        FocusView focusView = findViewById(R.id.view_focus);
 
-        mCropperLayout = (LinearLayout) findViewById(R.id.cropper_layout);
-        mCropImageView = (CropImageView) findViewById(R.id.CropImageView);
+        mCropperLayout = findViewById(R.id.cropper_layout);
+        mCropImageView = findViewById(R.id.CropImageView);
         mCropImageView.setGuidelines(2);
 
         mCameraPreview.setFocusView(focusView);
@@ -107,6 +127,8 @@ public class TakePhoteActivity extends AppCompatActivity implements CameraPrevie
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mAccel = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        verifyStoragePermissions(TakePhoteActivity.this);
 
     }
 
@@ -216,8 +238,10 @@ public class TakePhoteActivity extends AppCompatActivity implements CameraPrevie
                     String filename = DateFormat.format("yyyy-MM-dd kk.mm.ss", dateTaken).toString() + ".jpg";
                     Uri uri = insertImage(getContentResolver(), filename, dateTaken, PATH, filename, bitmap, null);
 
+                    // Intent代表一个应用"想去做什么事"，你可以用它做各种各样的任务，不过大部分的时候他们被用来启动另一个Activity。
                     Intent intent = new Intent(TakePhoteActivity.this, ShowCropperedActivity.class);
                     intent.setData(uri);
+                    // putExtra()方法把键名作为第一个参数，把值作为第二个参数。
                     intent.putExtra("path", PATH + filename);
                     intent.putExtra("width", bitmap.getWidth());
                     intent.putExtra("height", bitmap.getHeight());
@@ -253,7 +277,7 @@ public class TakePhoteActivity extends AppCompatActivity implements CameraPrevie
         Uri source = insertImage(getContentResolver(), filename, dateTaken, PATH, filename, bitmap, data);
 
         //准备截图
-        bitmap = Utils.rotate(bitmap, 90);
+        bitmap = Utils.rotate(bitmap, 0);
         mCropImageView.setImageBitmap(bitmap);
         showCropperLayout();
     }
@@ -270,7 +294,8 @@ public class TakePhoteActivity extends AppCompatActivity implements CameraPrevie
             try {
                 Bitmap bitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));
                 //与拍照保持一致方便处理
-                bitmap = Utils.rotate(bitmap, 90);
+                bitmap = Utils.rotate(bitmap, 0);
+
                 mCropImageView.setImageBitmap(bitmap);
             } catch (Exception e) {
                 Log.e("Exception", e.getMessage(), e);
@@ -301,9 +326,6 @@ public class TakePhoteActivity extends AppCompatActivity implements CameraPrevie
                     outputStream.write(jpegData);
                 }
             }
-        } catch (FileNotFoundException e) {
-            Log.e(TAG, e.getMessage());
-            return null;
         } catch (IOException e) {
             Log.e(TAG, e.getMessage());
             return null;

@@ -23,13 +23,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     private static final int PERMISSIONS_REQUEST_CAMERA = 454;
     static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
 
-    private ImageView imageView;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        imageView = (ImageView) findViewById(R.id.btn_camera);
+        ImageView imageView = findViewById(R.id.btn_camera);
         imageView.setOnClickListener(this);
 
         new Thread(new Runnable() {

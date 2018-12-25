@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">文字识别</string>
+    <string name="hint_text">请横屏拍照 题目文字尽量与参考线对齐</string>
+    <string name="crop_hint_text">一次只能提交一道题</string>
+    <string name="image2_text">灰度图</string>
+    <string name="image_text">原图片</string>
 </resources>

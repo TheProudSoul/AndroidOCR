@@ -8,6 +8,7 @@ import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
@@ -17,7 +18,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
+import com.wt.ocr.utils.HttpUtils;
+import com.wt.ocr.utils.Url;
 import com.wt.ocr.utils.Utils;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 
 
 /**
@@ -28,42 +40,41 @@ import com.wt.ocr.utils.Utils;
 
 public class ShowCropperedActivity extends AppCompatActivity {
 
-    //sd卡路径
-    private static String LANGUAGE_PATH = "";
     //识别语言
-    private static final String LANGUAGE = "chi_sim";//chi_sim | eng
-
+    private static final String LANGUAGE = "eng";//chi_sim | eng
+    public static final String PATH = Environment.getExternalStorageDirectory().toString() + "/AndroidMedia/";
     private static final String TAG = "ShowCropperedActivity";
-    private ImageView imageView;
     private ImageView imageView2;
     private TextView textView;
 
     private Uri uri;
     private String result;
+    private Bitmap bitmap;
     private TessBaseAPI baseApi = new TessBaseAPI();
     private Handler handler = new Handler();
     private ProgressDialog dialog;
 
     int endWidth, endHeight;
-    private ColorMatrix colorMatrix;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_croppered);
 
-        LANGUAGE_PATH = getExternalFilesDir("") + "/";
+        //sd卡路径
+        String LANGUAGE_PATH = getExternalFilesDir("") + "/";
         Log.e("---------", LANGUAGE_PATH);
 
+        //将runnable加载到handler的线程队列中去
         Thread myThread = new Thread(runnable);
         dialog = new ProgressDialog(this);
         dialog.setMessage("正在识别...");
         dialog.setCancelable(false);
         dialog.show();
 
-        imageView = (ImageView) findViewById(R.id.image);
-        imageView2 = (ImageView) findViewById(R.id.image2);
-        textView = (TextView) findViewById(R.id.text);
+        ImageView imageView = findViewById(R.id.image);
+//        imageView2 = findViewById(R.id.image2);
+        textView = findViewById(R.id.text);
 
         int width = getIntent().getIntExtra("width", 0);
         int height = getIntent().getIntExtra("height", 0);
@@ -82,9 +93,9 @@ public class ShowCropperedActivity extends AppCompatActivity {
         uri = getIntent().getData();
         imageView.setImageURI(uri);
 
-        baseApi.init(LANGUAGE_PATH, LANGUAGE);
-        //设置设别模式
-        baseApi.setPageSegMode(TessBaseAPI.PageSegMode.PSM_AUTO);
+//        baseApi.init(LANGUAGE_PATH, LANGUAGE);
+//        设置识别模式
+//        baseApi.setPageSegMode(TessBaseAPI.PageSegMode.PSM_AUTO);
 
         myThread.start();
     }
@@ -116,7 +127,9 @@ public class ShowCropperedActivity extends AppCompatActivity {
      * @return
      */
     public Bitmap convertGray(Bitmap bitmap3) {
-        colorMatrix = new ColorMatrix();
+//        long startTime=System.currentTimeMillis();
+
+        ColorMatrix colorMatrix = new ColorMatrix();
         colorMatrix.setSaturation(0);
         ColorMatrixColorFilter filter = new ColorMatrixColorFilter(colorMatrix);
 
@@ -126,6 +139,8 @@ public class ShowCropperedActivity extends AppCompatActivity {
         Canvas canvas = new Canvas(result);
 
         canvas.drawBitmap(bitmap3, 0, 0, paint);
+//        long endTime = System.currentTimeMillis();
+//        Log.e("灰度化处理耗时：",(endTime-startTime)+"ms");
         return result;
     }
 
@@ -190,28 +205,159 @@ public class ShowCropperedActivity extends AppCompatActivity {
         return bitmap;
     }
 
+    public void saveBitmapFile(Bitmap bitmap, String directory, String filename) {
+        long startTime=System.nanoTime();
+
+        String filePath = directory + filename;
+        File file = new File(filePath);//将要保存图片的路径
+        try {
+            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+            bos.flush();
+            bos.close();
+            long endTime = System.nanoTime();
+            Log.e("Bitmap转File处理耗时========",(endTime-startTime)+"ns");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     /**
      * 识别线程
      */
     private Runnable runnable = new Runnable() {
+        /**
+         * 不调用api的流程
+         */
+//        @Override
+//        public void run() {
+//            long startTime=System.nanoTime();
+//            bitmap = getBitmapFromUri(uri);
+//            long endTime = System.nanoTime();
+//            Log.e("uri转bitmap耗时=========",(endTime-startTime)+"ns");
+//            startTime=System.nanoTime();
+//            bitmap = convertGray(bitmap);
+//            endTime = System.nanoTime();
+//            Log.e("灰度化处理耗时=========",(endTime-startTime)+"ns");
+//            startTime=System.nanoTime();
+//            bitmap = binaryzation(bitmap, 100);
+//            endTime = System.nanoTime();
+//            Log.e("二值化处理耗时=========",(endTime-startTime)+"ns");
+//            startTime=System.nanoTime();
+//            baseApi.init(LANGUAGE_PATH, LANGUAGE);
+//            设置设别模式
+//            baseApi.setPageSegMode(TessBaseAPI.PageSegMode.PSM_AUTO);
+//            baseApi.setImage(bitmap);
+//            result = baseApi.getUTF8Text();
+//            baseApi.end();
+//            endTime = System.nanoTime();
+//            Log.e("识别Api耗时",(endTime-startTime)+"ns");
+//
+//            handler.post(new Runnable() {
+//                @Override
+//                public void run() {
+////                    imageView2.setImageBitmap(binaryzation(getBitmapFromUri(uri), 100));
+//                    imageView2.setImageBitmap(bitmap);
+//                    textView.setText(result);
+//                    dialog.dismiss();
+//                }
+//            });
+//        }
+
+        /**
+         * 直接发图到后台的流程
+         */
+//        @Override
+//        public void run() {
+//            final long startTime=System.nanoTime();
+//            HttpUtils.doFile(Url.imageServlet, getIntent().getStringExtra("path"), "eng_text.jpg", new Callback() {
+//                @Override
+//                public void onFailure(Call call, IOException e) {
+//                    Log.e("HTTP======", "doFile: Failed");
+//                    Log.e("Exception", e.getMessage(), e);
+//                }
+//
+//                @Override
+//                public void onResponse(Call call, Response response) throws IOException {
+//                    result = response.body().string();
+//                    Log.e("HTTP======", "doFile: Success");
+//                    Log.e("HTTP======", result);
+//                    long endTime = System.nanoTime();
+//                    Log.e("imageServletApi耗时",(endTime-startTime)+"ns");
+//                }
+//            });
+//            //延时5s，为了观察主界面中内容出现的时间
+//            try {
+//                Thread.sleep(5000);
+//            } catch (InterruptedException e) {
+//                // TODO: handle exception
+//                e.printStackTrace();
+//            }
+//
+//            handler.post(new Runnable() {
+//                @Override
+//                public void run() {
+////                    imageView2.setImageBitmap(binaryzation(getBitmapFromUri(uri), 100));
+////                    imageView2.setImageBitmap(bitmap);
+//                    textView.setText(result);
+//                    dialog.dismiss();
+//                }
+//            });
+//        }
+
+        /**
+         * 图像处理之后发后台的流程
+         */
         @Override
         public void run() {
-//            baseApi.setImage(binaryzation(getBitmapFromUri(uri), 100));
-            baseApi.setImage(convertGray(getBitmapFromUri(uri)));
-            result = baseApi.getUTF8Text();
-            baseApi.end();
+            long startTime=System.nanoTime();
+            bitmap = getBitmapFromUri(uri);
+            long endTime = System.nanoTime();
+            Log.e("uri转bitmap耗时=========",(endTime-startTime)+"ns");
+            startTime=System.nanoTime();
+            bitmap = convertGray(bitmap);
+            endTime = System.nanoTime();
+            Log.e("灰度化处理耗时=========",(endTime-startTime)+"ns");
+            startTime=System.nanoTime();
+            bitmap = binaryzation(bitmap, 100);
+            endTime = System.nanoTime();
+            Log.e("二值化处理耗时=========",(endTime-startTime)+"ns");
+            saveBitmapFile(bitmap,PATH, "eng_text.jpg");
+            final long apiStartTime=System.nanoTime();
+            HttpUtils.doFile(Url.TessCaller, PATH+"eng_text.jpg", "eng_text.jpg", new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    Log.e("HTTP======", "doFile: Failed");
+                    Log.e("Exception", e.getMessage(), e);
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    result = response.body().string();
+                    Log.e("HTTP======", "doFile: Success");
+                    Log.e("HTTP======", result);
+                    long apiEndTime = System.nanoTime();
+                    Log.e("TessCallerServletApi耗时",(apiEndTime-apiStartTime)+"ns");
+                }
+            });
+            //延时5s，为了观察主界面中内容出现的时间
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                // TODO: handle exception
+                e.printStackTrace();
+            }
 
             handler.post(new Runnable() {
                 @Override
                 public void run() {
 //                    imageView2.setImageBitmap(binaryzation(getBitmapFromUri(uri), 100));
-                    imageView2.setImageBitmap(convertGray(getBitmapFromUri(uri)));
+//                    imageView2.setImageBitmap(bitmap);
                     textView.setText(result);
                     dialog.dismiss();
                 }
             });
         }
+
+
     };
-
-
 }

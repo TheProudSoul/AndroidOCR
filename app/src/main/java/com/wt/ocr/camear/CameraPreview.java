@@ -19,6 +19,7 @@ import com.wt.ocr.utils.Utils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import static com.wt.ocr.TakePhoteActivity.isTransverse;
@@ -27,6 +28,7 @@ import static com.wt.ocr.TakePhoteActivity.isTransverse;
  * 自定义相机
  * Created by Administrator on 2016/12/8.
  */
+@SuppressWarnings("deprecation")
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback, Camera.AutoFocusCallback {
     private static final String TAG = "CameraPreview";
 
@@ -46,13 +48,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
      */
     private OnCameraStatusListener listener;
 
-    private SurfaceHolder holder;
     private Camera camera;
     private FocusView mFocusView;
 
     //创建一个PictureCallback对象，并实现其中的onPictureTaken方法
     private Camera.PictureCallback pictureCallback = new Camera.PictureCallback() {
-
         // 该方法用于处理拍摄后的照片数据
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
@@ -72,7 +72,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public CameraPreview(Context context, AttributeSet attrs) {
         super(context, attrs);
         // 获得SurfaceHolder对象
-        holder = getHolder();
+        SurfaceHolder holder = getHolder();
         // 指定用于捕捉拍照事件的SurfaceHolder.Callback对象
         holder.addCallback(this);
         // 设置SurfaceHolder对象的类型
@@ -198,9 +198,37 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 camera.setParameters(p);
             } catch (Exception e) {
                 Camera.Size previewSize = findBestPreviewSize(p);
-                p.setPreviewSize(previewSize.width, previewSize.height);
-                p.setPictureSize(previewSize.width, previewSize.height);
-                camera.setParameters(p);
+//                p.setPreviewSize(previewSize.width, previewSize.height);
+////                p.setPictureSize(previewSize.width, previewSize.height);
+////                camera.setParameters(p);
+                int PreviewWidth = 0;
+                int PreviewHeight = 0;
+                List<Camera.Size> sizeList = p.getSupportedPreviewSizes();
+                if (sizeList.size() > 1) {
+                    Iterator<Camera.Size> itor = sizeList.iterator();
+                    while (itor.hasNext()) {
+                        Camera.Size cur = itor.next();
+                        if (cur.width >= PreviewWidth
+                                && cur.height >= PreviewHeight) {
+                            PreviewWidth = cur.width;
+                            PreviewHeight = cur.height;
+                            break;
+                        }
+                    }
+                }else if (sizeList.size()==1){
+                    Camera.Size size = sizeList.get(0);
+                    PreviewWidth = size.width;
+                    PreviewHeight = size.height;
+                }
+                p.setPreviewSize(PreviewWidth, PreviewHeight);
+                p.setPictureSize(PreviewWidth, PreviewHeight);
+                try{
+                    camera.setParameters(p);
+                }catch (Exception e2){
+                    e2.printStackTrace();
+                    Camera.Parameters parameters = camera.getParameters();// 得到摄像头的参数
+                    camera.setParameters(parameters);
+                }
             }
         }
     }
