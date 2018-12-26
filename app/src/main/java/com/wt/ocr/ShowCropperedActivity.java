@@ -62,8 +62,8 @@ public class ShowCropperedActivity extends AppCompatActivity {
         setContentView(R.layout.activity_show_croppered);
 
         //sd卡路径
-        String LANGUAGE_PATH = getExternalFilesDir("") + "/";
-        Log.e("---------", LANGUAGE_PATH);
+//        String LANGUAGE_PATH = getExternalFilesDir("") + "/";
+//        Log.e("---------", LANGUAGE_PATH);
 
         //将runnable加载到handler的线程队列中去
         Thread myThread = new Thread(runnable);
@@ -73,7 +73,7 @@ public class ShowCropperedActivity extends AppCompatActivity {
         dialog.show();
 
         ImageView imageView = findViewById(R.id.image);
-//        imageView2 = findViewById(R.id.image2);
+        imageView2 = findViewById(R.id.image2);
         textView = findViewById(R.id.text);
 
         int width = getIntent().getIntExtra("width", 0);
@@ -221,6 +221,7 @@ public class ShowCropperedActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
     /**
      * 识别线程
      */
@@ -243,8 +244,9 @@ public class ShowCropperedActivity extends AppCompatActivity {
 //            endTime = System.nanoTime();
 //            Log.e("二值化处理耗时=========",(endTime-startTime)+"ns");
 //            startTime=System.nanoTime();
+//            String LANGUAGE_PATH = getExternalFilesDir("") + "/";
 //            baseApi.init(LANGUAGE_PATH, LANGUAGE);
-//            设置设别模式
+//            //设置设别模式
 //            baseApi.setPageSegMode(TessBaseAPI.PageSegMode.PSM_AUTO);
 //            baseApi.setImage(bitmap);
 //            result = baseApi.getUTF8Text();
@@ -351,13 +353,12 @@ public class ShowCropperedActivity extends AppCompatActivity {
                 @Override
                 public void run() {
 //                    imageView2.setImageBitmap(binaryzation(getBitmapFromUri(uri), 100));
-//                    imageView2.setImageBitmap(bitmap);
+                    imageView2.setImageBitmap(bitmap);
                     textView.setText(result);
                     dialog.dismiss();
                 }
             });
         }
-
 
     };
 }
