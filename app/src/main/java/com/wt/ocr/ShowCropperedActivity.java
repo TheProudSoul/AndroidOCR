@@ -268,64 +268,10 @@ public class ShowCropperedActivity extends AppCompatActivity {
         /**
          * 直接发图到后台的流程
          */
-//        @Override
-//        public void run() {
-//            final long startTime=System.nanoTime();
-//            HttpUtils.doFile(Url.imageServlet, getIntent().getStringExtra("path"), "eng_text.jpg", new Callback() {
-//                @Override
-//                public void onFailure(Call call, IOException e) {
-//                    Log.e("HTTP======", "doFile: Failed");
-//                    Log.e("Exception", e.getMessage(), e);
-//                }
-//
-//                @Override
-//                public void onResponse(Call call, Response response) throws IOException {
-//                    result = response.body().string();
-//                    Log.e("HTTP======", "doFile: Success");
-//                    Log.e("HTTP======", result);
-//                    long endTime = System.nanoTime();
-//                    Log.e("imageServletApi耗时",(endTime-startTime)+"ns");
-//                }
-//            });
-//            //延时5s，为了观察主界面中内容出现的时间
-//            try {
-//                Thread.sleep(5000);
-//            } catch (InterruptedException e) {
-//                // TODO: handle exception
-//                e.printStackTrace();
-//            }
-//
-//            handler.post(new Runnable() {
-//                @Override
-//                public void run() {
-////                    imageView2.setImageBitmap(binaryzation(getBitmapFromUri(uri), 100));
-////                    imageView2.setImageBitmap(bitmap);
-//                    textView.setText(result);
-//                    dialog.dismiss();
-//                }
-//            });
-//        }
-
-        /**
-         * 图像处理之后发后台的流程
-         */
         @Override
         public void run() {
-            long startTime=System.nanoTime();
-            bitmap = getBitmapFromUri(uri);
-            long endTime = System.nanoTime();
-            Log.e("uri转bitmap耗时=========",(endTime-startTime)+"ns");
-            startTime=System.nanoTime();
-            bitmap = convertGray(bitmap);
-            endTime = System.nanoTime();
-            Log.e("灰度化处理耗时=========",(endTime-startTime)+"ns");
-            startTime=System.nanoTime();
-            bitmap = binaryzation(bitmap, 100);
-            endTime = System.nanoTime();
-            Log.e("二值化处理耗时=========",(endTime-startTime)+"ns");
-            saveBitmapFile(bitmap,PATH, "eng_text.jpg");
-            final long apiStartTime=System.nanoTime();
-            HttpUtils.doFile(Url.TessCaller, PATH+"eng_text.jpg", "eng_text.jpg", new Callback() {
+            final long startTime=System.nanoTime();
+            HttpUtils.doFile(Url.imageServlet, getIntent().getStringExtra("path"), "eng_text.jpg", new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
                     Log.e("HTTP======", "doFile: Failed");
@@ -337,8 +283,8 @@ public class ShowCropperedActivity extends AppCompatActivity {
                     result = response.body().string();
                     Log.e("HTTP======", "doFile: Success");
                     Log.e("HTTP======", result);
-                    long apiEndTime = System.nanoTime();
-                    Log.e("TessCallerServletApi耗时",(apiEndTime-apiStartTime)+"ns");
+                    long endTime = System.nanoTime();
+                    Log.e("imageServletApi耗时",(endTime-startTime)+"ns");
                 }
             });
             //延时5s，为了观察主界面中内容出现的时间
@@ -353,12 +299,66 @@ public class ShowCropperedActivity extends AppCompatActivity {
                 @Override
                 public void run() {
 //                    imageView2.setImageBitmap(binaryzation(getBitmapFromUri(uri), 100));
-                    imageView2.setImageBitmap(bitmap);
+//                    imageView2.setImageBitmap(bitmap);
                     textView.setText(result);
                     dialog.dismiss();
                 }
             });
         }
+
+        /**
+         * 图像处理之后发后台的流程
+         */
+//        @Override
+//        public void run() {
+//            long startTime=System.nanoTime();
+//            bitmap = getBitmapFromUri(uri);
+//            long endTime = System.nanoTime();
+//            Log.e("uri转bitmap耗时=========",(endTime-startTime)+"ns");
+//            startTime=System.nanoTime();
+//            bitmap = convertGray(bitmap);
+//            endTime = System.nanoTime();
+//            Log.e("灰度化处理耗时=========",(endTime-startTime)+"ns");
+//            startTime=System.nanoTime();
+//            bitmap = binaryzation(bitmap, 100);
+//            endTime = System.nanoTime();
+//            Log.e("二值化处理耗时=========",(endTime-startTime)+"ns");
+//            saveBitmapFile(bitmap,PATH, "eng_text.jpg");
+//            final long apiStartTime=System.nanoTime();
+//            HttpUtils.doFile(Url.TessCaller, PATH+"eng_text.jpg", "eng_text.jpg", new Callback() {
+//                @Override
+//                public void onFailure(Call call, IOException e) {
+//                    Log.e("HTTP======", "doFile: Failed");
+//                    Log.e("Exception", e.getMessage(), e);
+//                }
+//
+//                @Override
+//                public void onResponse(Call call, Response response) throws IOException {
+//                    result = response.body().string();
+//                    Log.e("HTTP======", "doFile: Success");
+//                    Log.e("HTTP======", result);
+//                    long apiEndTime = System.nanoTime();
+//                    Log.e("TessCallerServletApi耗时",(apiEndTime-apiStartTime)+"ns");
+//                }
+//            });
+//            //延时5s，为了观察主界面中内容出现的时间
+//            try {
+//                Thread.sleep(5000);
+//            } catch (InterruptedException e) {
+//                // TODO: handle exception
+//                e.printStackTrace();
+//            }
+//
+//            handler.post(new Runnable() {
+//                @Override
+//                public void run() {
+////                    imageView2.setImageBitmap(binaryzation(getBitmapFromUri(uri), 100));
+//                    imageView2.setImageBitmap(bitmap);
+//                    textView.setText(result);
+//                    dialog.dismiss();
+//                }
+//            });
+//        }
 
     };
 }
