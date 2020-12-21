@@ -104,7 +104,7 @@ public class HttpUtils {
         //创建文件参数
         MultipartBody.Builder builder = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart(MEDIA_TYPE.type(), fileName,
+                .addFormDataPart("file", fileName,
                         RequestBody.create(MEDIA_TYPE, new File(pathName)));
         //发出请求参数
         Request request = new Request.Builder()
