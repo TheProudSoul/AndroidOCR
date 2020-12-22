@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.wt.ocr.TakePhoteActivity.isTransverse;
+import static com.wt.ocr.TakePhotoActivity.isTransverse;
 
 /**
  * 自定义相机

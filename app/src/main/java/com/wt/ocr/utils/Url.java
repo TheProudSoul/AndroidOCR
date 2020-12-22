@@ -5,7 +5,7 @@ package com.wt.ocr.utils;
  */
 
 public class Url {
-    private static final String domain = "192.168.43.254:9995";
+    private static final String domain = "123.57.108.149:9995";
     private static final String domain2 = "192.168.1.121:9995";
     private static final String protocol = "http://";
     private static final String app = "/AndroidOCR-backend";
