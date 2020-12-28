@@ -157,7 +157,7 @@ public class ShowCropperedActivity extends AppCompatActivity {
         int width = bitmap22.getWidth();
         int height = bitmap22.getHeight();
         // 创建二值化图像
-        Bitmap bitmap = null;
+        Bitmap bitmap;
         bitmap = bitmap22.copy(Bitmap.Config.ARGB_8888, true);
         // 遍历原始图像像素,并进行二值化处理
         for (int i = 0; i < width; i++) {
@@ -228,84 +228,84 @@ public class ShowCropperedActivity extends AppCompatActivity {
      */
     private Runnable runnable = new Runnable() {
         /**
-         * 不调用api的流程
-         */
-//        @Override
-//        public void run() {
-//            long startTime=System.nanoTime();
-//            bitmap = getBitmapFromUri(uri);
-//            long endTime = System.nanoTime();
-//            Log.e("uri转bitmap耗时=========",(endTime-startTime)+"ns");
-//            startTime=System.nanoTime();
-//            bitmap = convertGray(bitmap);
-//            endTime = System.nanoTime();
-//            Log.e("灰度化处理耗时=========",(endTime-startTime)+"ns");
-//            startTime=System.nanoTime();
-//            bitmap = binaryzation(bitmap, 100);
-//            endTime = System.nanoTime();
-//            Log.e("二值化处理耗时=========",(endTime-startTime)+"ns");
-//            startTime=System.nanoTime();
-//            String LANGUAGE_PATH = getExternalFilesDir("") + "/";
-//            baseApi.init(LANGUAGE_PATH, LANGUAGE);
-//            //设置设别模式
-//            baseApi.setPageSegMode(TessBaseAPI.PageSegMode.PSM_AUTO);
-//            baseApi.setImage(bitmap);
-//            result = baseApi.getUTF8Text();
-//            baseApi.end();
-//            endTime = System.nanoTime();
-//            Log.e("识别Api耗时",(endTime-startTime)+"ns");
-//
-//            handler.post(new Runnable() {
-//                @Override
-//                public void run() {
-////                    imageView2.setImageBitmap(binaryzation(getBitmapFromUri(uri), 100));
-//                    imageView2.setImageBitmap(bitmap);
-//                    textView.setText(result);
-//                    dialog.dismiss();
-//                }
-//            });
-//        }
-
-        /**
-         * 直接发图到后台的流程
+         * 不调用后端的流程
          */
         @Override
         public void run() {
-            final long startTime=System.nanoTime();
-            HttpUtils.doFile(Url.imageServlet, getIntent().getStringExtra("path"), "eng_text.jpg", new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    Log.e("HTTP======", "doFile: Failed");
-                    Log.e("Exception", e.getMessage(), e);
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    result = response.body().string();
-                    Log.e("HTTP======", "doFile: Success");
-                    Log.e("HTTP======", result);
-                    long endTime = System.nanoTime();
-                    Log.e("imageServletApi耗时",(endTime-startTime)+"ns");
-                }
-            });
-            //延时5s，为了观察主界面中内容出现的时间
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                // TODO: handle exception
-                e.printStackTrace();
-            }
-
+            long startTime = System.nanoTime();
+            bitmap = getBitmapFromUri(uri);
+            long endTime = System.nanoTime();
+            Log.e("【程序】", "图像文件转 bitmap 耗时：" + (endTime - startTime) + "ns");
+            startTime = System.nanoTime();
+            bitmap = convertGray(bitmap);
+            endTime = System.nanoTime();
+            Log.e("【程序】", "图像灰度化处理耗时：" + (endTime - startTime) + "ns");
+            startTime = System.nanoTime();
+            bitmap = binaryzation(bitmap, 100);
+            endTime = System.nanoTime();
+            Log.e("【程序】", "图像二值化处理耗时：" + (endTime - startTime) + "ns");
+            startTime = System.nanoTime();
+            String LANGUAGE_PATH = getExternalFilesDir("") + "/";
+            baseApi.init(LANGUAGE_PATH, LANGUAGE);
+            //设置设别模式
+            baseApi.setPageSegMode(TessBaseAPI.PageSegMode.PSM_AUTO);
+            baseApi.setImage(bitmap);
+            result = baseApi.getUTF8Text();
+            baseApi.end();
+            endTime = System.nanoTime();
+            Log.e("【程序】", "识别Api耗时：" + (endTime - startTime) + "ns");
+            Log.e("【程序】", "识别结果：" + result);
             handler.post(new Runnable() {
                 @Override
                 public void run() {
 //                    imageView2.setImageBitmap(binaryzation(getBitmapFromUri(uri), 100));
-//                    imageView2.setImageBitmap(bitmap);
+                    imageView2.setImageBitmap(bitmap);
                     textView.setText(result);
                     dialog.dismiss();
                 }
             });
         }
+
+        /**
+         * 直接发图到后台的流程
+         */
+//        @Override
+//        public void run() {
+//            final long startTime=System.nanoTime();
+//            HttpUtils.doFile(Url.imageServlet, getIntent().getStringExtra("path"), "eng_text.jpg", new Callback() {
+//                @Override
+//                public void onFailure(Call call, IOException e) {
+//                    Log.e("HTTP======", "doFile: Failed");
+//                    Log.e("Exception", e.getMessage(), e);
+//                }
+//
+//                @Override
+//                public void onResponse(Call call, Response response) throws IOException {
+//                    result = response.body().string();
+//                    Log.e("HTTP======", "doFile: Success");
+//                    Log.e("HTTP======", result);
+//                    long endTime = System.nanoTime();
+//                    Log.e("imageServletApi耗时",(endTime-startTime)+"ns");
+//                }
+//            });
+//            //延时5s，为了观察主界面中内容出现的时间
+//            try {
+//                Thread.sleep(5000);
+//            } catch (InterruptedException e) {
+//                // TODO: handle exception
+//                e.printStackTrace();
+//            }
+//
+//            handler.post(new Runnable() {
+//                @Override
+//                public void run() {
+////                    imageView2.setImageBitmap(binaryzation(getBitmapFromUri(uri), 100));
+////                    imageView2.setImageBitmap(bitmap);
+//                    textView.setText(result);
+//                    dialog.dismiss();
+//                }
+//            });
+//        }
 
         /**
          * 图像处理之后发后台的流程
@@ -315,18 +315,18 @@ public class ShowCropperedActivity extends AppCompatActivity {
 //            long startTime=System.nanoTime();
 //            bitmap = getBitmapFromUri(uri);
 //            long endTime = System.nanoTime();
-//            Log.e("uri转bitmap耗时=========",(endTime-startTime)+"ns");
+//            Log.e("【程序】", "图像文件转 bitmap 耗时：" + (endTime - startTime) + "ns");
 //            startTime=System.nanoTime();
 //            bitmap = convertGray(bitmap);
 //            endTime = System.nanoTime();
-//            Log.e("灰度化处理耗时=========",(endTime-startTime)+"ns");
+//            Log.e("【程序】", "图像灰度化处理耗时：" + (endTime - startTime) + "ns");
 //            startTime=System.nanoTime();
 //            bitmap = binaryzation(bitmap, 100);
 //            endTime = System.nanoTime();
-//            Log.e("二值化处理耗时=========",(endTime-startTime)+"ns");
+//            Log.e("【程序】", "图像二值化处理耗时：" + (endTime - startTime) + "ns");
 //            saveBitmapFile(bitmap,PATH, "eng_text.jpg");
 //            final long apiStartTime=System.nanoTime();
-//            HttpUtils.doFile(Url.TessCaller, PATH+"eng_text.jpg", "eng_text.jpg", new Callback() {
+//            HttpUtils.doFile(Url.tessCaller, PATH+"eng_text.jpg", "eng_text.jpg", new Callback() {
 //                @Override
 //                public void onFailure(Call call, IOException e) {
 //                    Log.e("HTTP======", "doFile: Failed");
@@ -339,7 +339,7 @@ public class ShowCropperedActivity extends AppCompatActivity {
 //                    Log.e("HTTP======", "doFile: Success");
 //                    Log.e("HTTP======", result);
 //                    long apiEndTime = System.nanoTime();
-//                    Log.e("TessCallerServletApi耗时",(apiEndTime-apiStartTime)+"ns");
+//                    Log.e("【程序】", "TessCallerServletApi 耗时：" + (apiEndTime - apiStartTime) + "ns");
 //                }
 //            });
 //            //延时5s，为了观察主界面中内容出现的时间
